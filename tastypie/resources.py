@@ -973,10 +973,10 @@ class Resource(object):
         self.is_valid(bundle, request)
         
         try:
-            updated_bundle = self.obj_update(bundle, request=request, **kwargs)
+            updated_bundle = self.obj_update(bundle, request=request, **self.remove_api_resource_names(kwargs))
             return HttpAccepted()
         except:
-            updated_bundle = self.obj_create(bundle, request=request, **kwargs)
+            updated_bundle = self.obj_create(bundle, request=request, **self.remove_api_resource_names(kwargs))
             return HttpCreated(location=self.get_resource_uri(updated_bundle))
     
     def post_list(self, request, **kwargs):
@@ -991,7 +991,7 @@ class Resource(object):
         deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
         self.is_valid(bundle, request)
-        updated_bundle = self.obj_create(bundle, request=request, **kwargs)
+        updated_bundle = self.obj_create(bundle, request=request, **self.remove_api_resource_names(kwargs))
         return HttpCreated(location=self.get_resource_uri(updated_bundle))
     
     def post_detail(self, request, **kwargs):
@@ -1365,7 +1365,7 @@ class ModelResource(Resource):
         applicable_filters = self.build_filters(filters=filters)
         
         try:
-            return self.get_object_list(request).filter(**applicable_filters).filter(**kwargs)
+            return self.get_object_list(request).filter(**applicable_filters).filter(**self.remove_api_resource_names(kwargs))
         except ValueError, e:
             raise NotFound("Invalid resource lookup data provided (mismatched type).")
     
