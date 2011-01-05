@@ -44,6 +44,7 @@ class ResourceOptions(object):
     serializer = Serializer()
     authentication = Authentication()
     authorization = ReadOnlyAuthorization()
+    paginator = Paginator
     cache = NoCache()
     throttle = BaseThrottle()
     validation = Validation()
@@ -897,7 +898,7 @@ class Resource(object):
         objects = self.obj_get_list(request=request, **self.remove_api_resource_names(kwargs))
         sorted_objects = self.apply_sorting(objects, options=request.GET)
         
-        paginator = Paginator(request.GET, sorted_objects, resource_uri=self.get_resource_list_uri(),
+        paginator = self._meta.paginator(request.GET, sorted_objects, resource_uri=self.get_resource_list_uri(),
            limit=self._meta.limit)
         to_be_serialized = paginator.page()
         
