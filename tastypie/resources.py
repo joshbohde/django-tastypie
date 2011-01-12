@@ -159,6 +159,7 @@ class Resource(object):
     def __getattr__(self, name):
         if name in self.fields:
             return self.fields[name]
+        raise AttributeError
     
     def wrap_view(self, view):
         """
