@@ -1162,6 +1162,41 @@ class ModelResourceTestCase(TestCase):
         self.assertEqual(Note.objects.filter(is_active=True).count(), 1)
         new_note = Note.objects.get(slug='cat-is-back-again')
         self.assertEqual(new_note.content, "The cat is back. The dog coughed him up out back.")
+
+    def test_patch_list(self):
+        self.assertEqual(Note.objects.count(), 6)
+        self.assertEqual(Note.objects.filter(is_active=True).count(), 4)
+
+        request = MockRequest()
+        request.GET = {'format': 'json'}
+        request.method = 'PATCH'
+        request.raw_post_data = '{"is_active": false}'
+
+        resource = NoteResource()
+        resp = resource.patch_list(request)
+        self.assertEqual(resp.status_code, 204)
+
+        self.assertEqual(Note.objects.count(), 6)
+        self.assertEqual(Note.objects.filter(is_active=True).count(), 0)
+
+
+    def test_patch_detail(self):
+        self.assertEqual(Note.objects.count(), 6)
+        resource = NoteResource()
+        request = MockRequest()
+        request.GET = {'format': 'json'}
+        request.method = 'PATCH'
+        request.raw_post_data = '{"is_active": true}'
+
+        note = Note.objects.filter(is_active=False)[0]
+        
+        resp = resource.patch_detail(request, pk=note.pk)
+        self.assertEqual(resp.status_code, 204)
+
+        new_note = Note.objects.get(pk=note.pk)
+        self.assertEqual(new_note.content, note.content)
+        self.assertEqual(new_note.is_active, False)
+    
     
     def test_put_detail(self):
         self.assertEqual(Note.objects.count(), 6)
@@ -1198,6 +1233,9 @@ class ModelResourceTestCase(TestCase):
         self.assertEqual(Note.objects.count(), 7)
         new_note = Note.objects.get(slug='cat-is-back')
         self.assertEqual(new_note.content, "The cat is back. The dog coughed him up out back.")
+
+
+
     
     def test_post_detail(self):
         resource = NoteResource()

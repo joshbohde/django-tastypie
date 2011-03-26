@@ -49,7 +49,7 @@ class ResourceOptions(object):
     throttle = BaseThrottle()
     validation = Validation()
     paginator_class = Paginator
-    allowed_methods = ['get', 'post', 'put', 'delete']
+    allowed_methods = ['get', 'post', 'put', 'delete', 'patch']
     list_allowed_methods = None
     detail_allowed_methods = None
     limit = getattr(settings, 'API_LIMIT_PER_PAGE', 20)
@@ -851,6 +851,17 @@ class Resource(object):
         ``Models``.
         """
         raise NotImplementedError()
+
+    def obj_update_list(self, bundle, request=None, **kwargs):
+        """
+        Updates an existing object collection based on the provided data.
+
+        This needs to be implemented at the user level.
+
+        ``ModelResource`` includes a full working version specific to Django's
+        ``Models``.
+        """
+        raise NotImplementedError()
     
     def obj_delete_list(self, request=None, **kwargs):
         """
@@ -960,6 +971,29 @@ class Resource(object):
         
         bundle = self.full_dehydrate(obj)
         return self.create_response(request, bundle)
+
+
+    def patch_list(self, request, **kwargs):
+        """
+        Applies the patch to the collection of resources.
+
+        Calls ``obj_update_list`` to update the collection. 
+
+        Return ``HttpAccepted`` (204 No Content).
+        """
+        deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
+
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
+        self.is_valid(bundle, request)
+        
+        self.obj_update_list(bundle,
+                             request=request,
+                             **self.remove_api_resource_names(kwargs))
+
+        return HttpAccepted()
+        
+    patch_detail = patch_list
+        
     
     def put_list(self, request, **kwargs):
         """
@@ -1514,6 +1548,42 @@ class ModelResource(Resource):
         m2m_bundle = self.hydrate_m2m(bundle)
         self.save_m2m(m2m_bundle)
         return bundle
+
+    def full_patch(self, bundle):
+        """
+        Given a populated bundle, make a patch dictionary for the update method.
+        """
+        patch = {}
+        for field_name, field_object in self.fields.items():
+            if field_object.attribute:
+                value = field_object.hydrate(bundle)
+                if value is not None or field_object.null:
+                    if not getattr(field_object, 'is_related', False):
+                        patch[field_object.attribute] = value
+                    elif not getattr(field_object, 'is_m2m', False):
+                        patch[field_object.attribute] = value.obj
+
+            method = getattr(self, "patch_%s" % field_name, None)
+
+            if method:
+                patch = method(patch)
+
+        patch = self.patch(patch)
+        return patch
+
+    def patch(self, patch):
+        return patch
+
+    def obj_update_list(self, bundle, request=None, **kwargs):
+        """
+        A ORM-specific implementation of ``obj_update_list``.
+        """
+        collection = self.get_object_list(request).filter(**kwargs)
+
+        patch = self.full_patch(bundle)
+         
+        return collection.update(**patch)
+
     
     def obj_delete_list(self, request=None, **kwargs):
         """
