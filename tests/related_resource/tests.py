@@ -1,6 +1,7 @@
 import json
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.http import HttpRequest
 from django.test import TestCase
 from core.models import Note, MediaBit
 from core.tests.mocks import MockRequest
@@ -195,3 +196,30 @@ class OneToManySetupTestCase(TestCase):
         note = Note.objects.latest('created')
         self.assertEqual(note.media_bits.count(), 1)
         self.assertEqual(note.media_bits.all()[0].title, u'Picture #1')
+
+
+class RelatedPatchTestCase(TestCase):
+    def test_patch_to_one(self):
+        resource = api.canonical_resource_for('category')
+        category = Category.objects.create(parent=None, name='Dad')
+
+        request = HttpRequest()
+        request.GET = {'format': 'json'}
+        request.method = 'PATCH'
+        request._read_started = False
+
+        data = {
+            'objects':[
+                {
+                    'name': 'Father',
+                    'parent': {
+                        'name': 'Grandfather'
+                    }
+                }
+            ]
+        }
+
+        request._raw_post_data = request._body = json.dumps(data)
+
+        resp = resource.dispatch_detail(request)
+        self.assertEqual(resp.status_code, 202)
