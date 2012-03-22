@@ -5,7 +5,7 @@ from django.http import HttpRequest
 from django.test import TestCase
 from core.models import Note, MediaBit
 from core.tests.mocks import MockRequest
-from related_resource.api.resources import FreshNoteResource
+from related_resource.api.resources import FreshNoteResource, FullCategoryResource
 from related_resource.api.urls import api
 from related_resource.models import Category, Tag, Taggable, TaggableTag, ExtraData
 
@@ -200,26 +200,24 @@ class OneToManySetupTestCase(TestCase):
 
 class RelatedPatchTestCase(TestCase):
     def test_patch_to_one(self):
-        resource = api.canonical_resource_for('category')
-        category = Category.objects.create(parent=None, name='Dad')
+        resource = FullCategoryResource()
+        parent = Category.objects.create(parent=None, name='Dad')
+        child = Category.objects.create(parent=parent, name='Steve')
 
         request = HttpRequest()
         request.GET = {'format': 'json'}
         request.method = 'PATCH'
         request._read_started = False
 
-        data = {
-            'objects':[
-                {
-                    'name': 'Father',
-                    'parent': {
-                        'name': 'Grandfather'
-                    }
-                }
-            ]
+        data ={
+            'name': 'Steven',
         }
 
         request._raw_post_data = request._body = json.dumps(data)
 
-        resp = resource.dispatch_detail(request)
+        resp = resource.dispatch_detail(request, pk=child.pk)
         self.assertEqual(resp.status_code, 202)
+        child = Category.objects.get(pk=child.pk)
+        
+        self.assertEqual(child.name, 'Steven')
+        

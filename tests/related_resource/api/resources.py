@@ -31,6 +31,10 @@ class CategoryResource(ModelResource):
         authorization = Authorization()
 
 
+class FullCategoryResource(CategoryResource):
+    parent = fields.ToOneField('self', 'parent', null=True, full=True)
+
+
 class TagResource(ModelResource):
     taggabletags = fields.ToManyField(
             'related_resource.api.resources.TaggableTagResource', 'taggabletags',
