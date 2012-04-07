@@ -643,6 +643,17 @@ class Resource(object):
 
         return self.obj_get(request=request, **self.remove_api_resource_names(kwargs))
 
+    def return_full_data(self, request):
+        """
+        Given a bundle, determine if the response should
+        include a full representation of the data.
+
+        Mostly a hook for custom behaviour, this
+        defaults to ``Meta.always_return_data``
+        """
+        return self._meta.always_return_data
+
+
     # Data preparation.
 
     def full_dehydrate(self, bundle):
@@ -1111,7 +1122,7 @@ class Resource(object):
                 self.rollback(bundles_seen)
                 raise
 
-        if not self._meta.always_return_data:
+        if not self.return_full_data(request):
             return http.HttpNoContent()
         else:
             to_be_serialized = {}
@@ -1145,7 +1156,7 @@ class Resource(object):
         try:
             updated_bundle = self.obj_update(bundle, request=request, **self.remove_api_resource_names(kwargs))
 
-            if not self._meta.always_return_data:
+            if not self.return_full_data(request):
                 return http.HttpNoContent()
             else:
                 updated_bundle = self.full_dehydrate(updated_bundle)
@@ -1155,7 +1166,7 @@ class Resource(object):
             updated_bundle = self.obj_create(bundle, request=request, **self.remove_api_resource_names(kwargs))
             location = self.get_resource_uri(updated_bundle)
 
-            if not self._meta.always_return_data:
+            if not self.return_full_data(request):
                 return http.HttpCreated(location=location)
             else:
                 updated_bundle = self.full_dehydrate(updated_bundle)
@@ -1179,7 +1190,7 @@ class Resource(object):
         updated_bundle = self.obj_create(bundle, request=request, **self.remove_api_resource_names(kwargs))
         location = self.get_resource_uri(updated_bundle)
 
-        if not self._meta.always_return_data:
+        if not self.return_full_data(request):
             return http.HttpCreated(location=location)
         else:
             updated_bundle = self.full_dehydrate(updated_bundle)
