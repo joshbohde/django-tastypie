@@ -2027,6 +2027,11 @@ class ModelResource(Resource):
             if field_object.blank:
                 continue
 
+            # Don't save things that are not dict-alike
+            # which means it's probably a uri
+            if not hasattr(bundle.data.get(field_name, None), 'items'):
+                continue
+
             # Get the object.
             try:
                 related_obj = getattr(bundle.obj, field_object.attribute)
