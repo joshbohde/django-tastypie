@@ -2027,11 +2027,6 @@ class ModelResource(Resource):
             if field_object.blank:
                 continue
 
-            # Don't save things that are not dict-alike
-            # which means it's probably a uri
-            if not hasattr(bundle.data.get(field_name, None), 'items'):
-                continue
-
             # Get the object.
             try:
                 related_obj = getattr(bundle.obj, field_object.attribute)
@@ -2040,12 +2035,6 @@ class ModelResource(Resource):
 
             # Because sometimes it's ``None`` & that's OK.
             if related_obj:
-                related_resource = field_object.get_related_resource(related_obj)
-                related_bundle = related_resource.build_bundle(obj=related_obj, request=bundle.request)
-
-                # FIXME: To avoid excessive saves, we may need to pass along a
-                #        set of objects/pks seens so as not to resave.
-                related_resource.save(related_bundle)
                 setattr(bundle.obj, field_object.attribute, related_obj)
 
     def save_m2m(self, bundle):
@@ -2081,14 +2070,6 @@ class ModelResource(Resource):
             related_objs = []
 
             for related_bundle in bundle.data[field_name]:
-                # FIXME: Dupe the original bundle, copy in the new object &
-                #        check the perms on that (usin the related resource)?
-                related_resource = field_object.get_related_resource(bundle.obj)
-                related_bundle = related_resource.build_bundle(obj=bundle.obj, request=bundle.request)
-
-                # FIXME: To avoid excessive saves, we may need to pass along a
-                #        set of objects/pks seens so as not to resave.
-                related_resource.save(related_bundle)
                 related_objs.append(related_bundle.obj)
 
             related_mngr.add(*related_objs)

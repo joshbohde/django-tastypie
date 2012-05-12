@@ -556,7 +556,9 @@ class RelatedField(ApiField):
                 
                 return fk_resource.obj_update(fk_bundle, **lookup_kwargs)
             except NotFound:
-                return fk_resource.full_hydrate(fk_bundle)
+                if not fk_resource.can_create():
+                    return fk_resource.full_hydrate(fk_bundle)
+                return fk_resource.obj_create(fk_bundle)
         except MultipleObjectsReturned:
             return fk_resource.full_hydrate(fk_bundle)
 
