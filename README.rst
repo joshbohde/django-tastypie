@@ -2,6 +2,10 @@
 django-tastypie
 ===============
 
+.. image:: https://secure.travis-ci.org/toastdriven/django-tastypie.png?branch=master
+    :alt: Build Status
+    :target: https://secure.travis-ci.org/toastdriven/django-tastypie
+
 Creating delicious APIs for Django apps since 2010.
 
 Currently in beta (v0.9.11) but being used actively in production on several
