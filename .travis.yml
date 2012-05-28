@@ -12,7 +12,7 @@ env:
 # command to install dependencies
 install:
     - sudo aptitude install -y binutils gdal-bin libproj-dev postgresql-9.1-postgis postgresql-server-dev-9.1
-    - sudo -u postgres tests/create_template_postgis-debian.sh
+    - tests/create_template_postgis-debian.sh
     - createdb -T template_postgis tastypie.db -U postgres
     - pip install tox
 
