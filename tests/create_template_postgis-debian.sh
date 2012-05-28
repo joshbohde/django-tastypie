@@ -30,15 +30,15 @@ then
     GEOGRAPHY=1
 fi
 
-createdb -u postgres -E UTF8 template_postgis && \
+createdb -U postgres -E UTF8 template_postgis && \
 ( createlang -d template_postgis -l | grep plpgsql || createlang -d template_postgis plpgsql ) && \
-psql -u postgres -d postgres -c "UPDATE pg_database SET datistemplate='true' WHERE datname='template_postgis';" && \
-psql -u postgres -d template_postgis -f $POSTGIS_SQL_PATH/$POSTGIS_SQL && \
-psql -u postgres -d template_postgis -f $POSTGIS_SQL_PATH/spatial_ref_sys.sql && \
-psql -u postgres -d template_postgis -c "GRANT ALL ON geometry_columns TO PUBLIC;" && \
-psql -u postgres -d template_postgis -c "GRANT ALL ON spatial_ref_sys TO PUBLIC;"
+psql -U postgres -d postgres -c "UPDATE pg_database SET datistemplate='true' WHERE datname='template_postgis';" && \
+psql -U postgres -d template_postgis -f $POSTGIS_SQL_PATH/$POSTGIS_SQL && \
+psql -U postgres -d template_postgis -f $POSTGIS_SQL_PATH/spatial_ref_sys.sql && \
+psql -U postgres -d template_postgis -c "GRANT ALL ON geometry_columns TO PUBLIC;" && \
+psql -U postgres -d template_postgis -c "GRANT ALL ON spatial_ref_sys TO PUBLIC;"
 
 if [ $GEOGRAPHY -eq 1 ]
 then
-    psql -u postgres -d template_postgis -c "GRANT ALL ON geography_columns TO PUBLIC;"
+    psql -U postgres -d template_postgis -c "GRANT ALL ON geography_columns TO PUBLIC;"
 fi
