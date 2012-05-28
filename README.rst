@@ -116,4 +116,3 @@ from `Toast Driven`_. Services offered include:
 If you're interested, please contact Daniel Lindsley (daniel@toastdriven.com).
 
 .. _`Toast Driven`: http://toastdriven.com/
- 
