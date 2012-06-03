@@ -6,6 +6,7 @@ from django.utils import simplejson as json
 from core.models import Note, MediaBit
 from core.tests.mocks import MockRequest
 from tastypie import fields
+from tastypie.bundle import Bundle
 from related_resource.api.resources import FreshNoteResource, CategoryResource
 from related_resource.api.urls import api
 from related_resource.models import Category, Tag, Taggable, TaggableTag, ExtraData
@@ -225,3 +226,32 @@ class RelatedPatchTestCase(TestCase):
         self.assertEqual(resp.status_code, 202)
         cat2 = Category.objects.get(pk=2)
         self.assertEqual(cat2.name, 'Kid')
+
+
+class ReadOnlyFullCategoryResource(CategoryResource):
+    parent = fields.ToOneField('self', 'parent', null=True, full=True, readonly=True)
+
+
+class RelatedFullPermissionsTest(TestCase):
+    def test_readonly_permissions(self):
+        resource = ReadOnlyFullCategoryResource()
+        cat1 = Category.objects.create(name='Dad')
+
+        request = HttpRequest()
+        request.GET = {'format': 'json'}
+        request.method = 'POST'
+
+        parent = resource.full_dehydrate(Bundle(obj=cat1)).data
+        parent['name'] = 'Father'
+
+        data = {
+            'name': 'Child',
+            'parent': parent
+        }
+
+        request._raw_post_data = request._body = json.dumps(data)
+        resp = resource.post_list(request)
+        self.assertEqual(resp.status_code, 201)
+
+        cat1 = Category.objects.get(pk=cat1.pk)
+        self.assertEqual(cat1.name, 'Dad')
