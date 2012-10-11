@@ -57,11 +57,10 @@ class Paginator(object):
 
         Default is 20 per page.
         """
-        settings_limit = getattr(settings, 'API_LIMIT_PER_PAGE', 20)
 
         limit = self.request_data.get('limit', self.limit)
         if limit is None:
-            limit = settings_limit
+            limit = getattr(settings, 'API_LIMIT_PER_PAGE', 20)
 
         try:
             limit = int(limit)
