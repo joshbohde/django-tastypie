@@ -91,11 +91,6 @@ class FreshNoteResource(ModelResource):
         resource_name = 'freshnote'
         authorization = Authorization()
 
-    def hydrate_m2m(self, *args, **kwargs):
-        # FIXME: Uncomment here to dig into how the hydrate/saves go wrong.
-        # import pdb; pdb.set_trace()
-        return super(FreshNoteResource, self).hydrate_m2m(*args, **kwargs)
-
 
 class FreshMediaBitResource(ModelResource):
     note = fields.ToOneField(FreshNoteResource, 'note')
