@@ -2188,17 +2188,20 @@ class ModelResource(Resource):
 
                     setattr(related_obj, field_object.related_name, bundle.obj)
 
-                related_resource = field_object.get_related_resource(related_obj)
-                related_bundle = related_resource.build_bundle(
-                    obj=related_obj,
-                    data=bundle.data.get(field_name),
-                    request=bundle.request
-                )
+                data = bundle.data.get(field_name)
 
-                # FIXME: To avoid excessive saves, we may need to pass along a
-                #        set of objects/pks seens so as not to resave.
-                related_resource.save(related_bundle)
-                setattr(bundle.obj, field_object.attribute, related_obj)
+                if data:
+                    related_resource = field_object.get_related_resource(related_obj)
+                    related_bundle = related_resource.build_bundle(
+                        obj=related_obj,
+                        data=data,
+                        request=bundle.request
+                    )
+
+                    # FIXME: To avoid excessive saves, we may need to pass along a
+                    #        set of objects/pks seens so as not to resave.
+                    related_resource.save(related_bundle)
+                    setattr(bundle.obj, field_object.attribute, related_obj)
 
     def save_m2m(self, bundle):
         """
